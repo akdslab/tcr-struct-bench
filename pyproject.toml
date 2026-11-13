@@ -1,0 +1,65 @@
+[project]
+name = "tcrstruct"
+dynamic = ["version"]
+description = "TCR-pMHC structures on top of PDBFrame: annotation, normalization, benchmarking"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+authors = [{ name = "Ali Davari", email = "davari@uchicago.edu" }]
+dependencies = [
+    # the general structure object this package specialises
+    "pdbframe>=0.2.0",
+    "pandas>=3.0",
+    "numpy>=1.24",
+    "biopython>=1.80",
+    "scipy>=1.10",
+    # ANARCI (IMGT numbering of TCR chains), with a pyhmmer backend: no hmmscan binary;
+    # MHC gene matching and annotation (0.1.5: imgt_regions)
+    "tcrkit>=0.1.5",
+]
+
+[project.scripts]
+tcrstruct = "tcrstruct.cli:main"
+
+[project.optional-dependencies]
+# progress bars for directory runs
+progress = ["tqdm>=4.60"]
+
+[tool.hatch.version]
+path = "src/tcrstruct/__init__.py"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tcrstruct"]
+
+# the docs and the user skills go in the wheel too (tcs.docs, tcrstruct skills install);
+# skills are listed one by one so a local, untracked skill is never packaged
+[tool.hatch.build.targets.wheel.force-include]
+"docs" = "tcrstruct/docs"
+".claude/skills/score-tcrpmhc-models" = "tcrstruct/skills/score-tcrpmhc-models"
+".claude/skills/inspect-tcrpmhc" = "tcrstruct/skills/inspect-tcrpmhc"
+".claude/skills/show-tcrpmhc" = "tcrstruct/skills/show-tcrpmhc"
+".claude/skills/curate-tcrpmhc-dataset" = "tcrstruct/skills/curate-tcrpmhc-dataset"
+
+[tool.uv.sources]
+# from GitHub, pinned to a commit. To work on them side by side, install your clones
+# over these: uv pip install -e ../PDBFrame -e ../tcrkit
+pdbframe = { git = "https://github.com/akdslab/PDBFrame.git", rev = "31180efade52b01be8001d3f423a205bd08a310b" }
+tcrkit = { git = "https://github.com/akdslab/tcrkit.git", rev = "77ca612397491c1b211682323c6abebe232681f8" }
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ipykernel>=6.29",
+    "nbformat>=5.10",
+    "nbconvert>=7.16",
+    "tqdm>=4.60",
+    "py3Dmol>=2.0",
+    "matplotlib>=3.11.2",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

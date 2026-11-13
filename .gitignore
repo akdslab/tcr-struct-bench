@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+sandbox/
+
+# local experiments, not part of the package
+sandbox-*/
+.ipynb_checkpoints/
+
+# private notes (not published): the reference project, parity spec and scripts
+private/
+CLAUDE.local.md
+.claude/skills/maintain-reference-parity/
+
+# local planning notes
+ROADMAP.md
