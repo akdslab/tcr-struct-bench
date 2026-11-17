@@ -29,6 +29,6 @@ def example(*parts: str) -> Path:
         return path
     if not EXAMPLE_DATA.is_dir():
         raise FileNotFoundError(f'no example data at {EXAMPLE_DATA}: it comes with a source '
-                                'checkout of tcr-struct-bench (tests/data)')
+                                'checkout of tcrstruct (tests/data)')
     entries = sorted(p.name for p in EXAMPLE_DATA.iterdir() if p.is_dir())
     raise FileNotFoundError(f'{path} does not exist; the examples are {", ".join(entries)}')

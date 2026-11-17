@@ -1,4 +1,4 @@
-# tcr-struct-bench
+# tcrstruct
 
 `tcrstruct` (`import tcrstruct as tcs`) scores a predicted TCR-pMHC structure against its
 experimental reference. Built on PDBFrame (structures) and tcrkit (sequence annotation).

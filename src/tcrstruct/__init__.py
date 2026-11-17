@@ -67,4 +67,4 @@ __all__ = ['TCRFrame', 'annotate', 'normalize', 'detect_chains', 'REGIONS',
            'plot_contact_map', 'cdr_contacts', 'find_complexes', 'complex_table', 'split',
            'TCRStructWarning', 'find_fused_peptide',
            'split_fused_peptide', 'verify', 'verify_dir', 'is_valid', 'docs', 'install_skills']
-__version__ = '0.2.0'
+__version__ = '0.2.1'

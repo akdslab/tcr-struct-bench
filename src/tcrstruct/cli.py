@@ -206,11 +206,13 @@ def _chains(args):
     from pdbframe import PDBFrame
     from .chains import detect_chains
     table = detect_chains(PDBFrame.read(args.structure))
-    print(f'{"chain":<6}{"type":<9}{"details":<9}{"new":<5}{"length":>7}  sequence')
+    width = max(8, *table['species'].str.len()) + 1
+    print(f'{"chain":<6}{"type":<9}{"details":<10}{"new":<5}{"species":<{width}}'
+          f'{"length":>6}  sequence')
     for chain, row in table.iterrows():
         seq = row['sequence'] if len(row['sequence']) <= 60 else row['sequence'][:57] + '...'
-        print(f'{chain:<6}{row["type"]:<9}{row["details"]:<9}{row["new_chain"]:<5}'
-              f'{len(row["sequence"]):>7}  {seq}')
+        print(f'{chain:<6}{row["type"]:<9}{row["details"]:<10}{row["new_chain"]:<5}'
+              f'{row["species"]:<{width}}{len(row["sequence"]):>6}  {seq}')
 
 
 def _docs(args):

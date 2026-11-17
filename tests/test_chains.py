@@ -39,7 +39,7 @@ def class_i():
 
 
 def test_class_i(class_i):
-    assert list(class_i.columns) == ['type', 'details', 'new_chain', 'sequence']
+    assert list(class_i.columns) == ['type', 'details', 'new_chain', 'species', 'sequence']
     assert class_i['new_chain'].to_dict() == {'H': 'A', 'L': 'F', 'P': 'C', 'Q': 'D', 'R': 'E'}
     assert class_i['type'].to_dict() == {'H': 'MHC', 'L': 'MHC', 'P': 'peptide', 'Q': 'TCR',
                                          'R': 'TCR'}
@@ -47,6 +47,29 @@ def test_class_i(class_i):
     # a D chain is taken as alpha when there is no A
     assert class_i.loc[['Q', 'R'], 'details'].tolist() == ['D', 'Beta']
     assert class_i.loc['H', 'details'] == 'A'
+    assert class_i['species'].to_dict() == {'H': 'human', 'L': 'human', 'P': '-',
+                                            'Q': 'human', 'R': 'human'}
+
+
+# pig SLA-1*04 and its B2M (PDB 3QQ3 chains A, B), chicken BF2*04 (4G42 chain A)
+SLA1 = ('GPHSLSYFYTAVSRPDRGDSRFIAVGYVDDTQFVRFDNYAPNPRMEPRVPWIQQEGQEYWDRETRNVKETAQTYGVGLN'
+        'TLRGYYNQSEAGSHTLQSMYGCYLGPDGLLLHGYRQDAYDGADYIALNEDLRSWTAADMAAQITKRKWEAADEAERRRS'
+        'YLQGLCVESLRRYLEMGKDTLQRAEPPKTHVTRHPSSDLGVTLRCWALGFYPKEISLTWQREGQDQSQDMELVETRPSG'
+        'DGTFQKWAALVVPPGEEQSYTCHVQHEGLQEPLTLRWD')
+BF2 = ('MEFELHTLRYIRTAMTDPGPGQPWFVTVGYVDGELFVHYNSTARRYVPRTEWIAANTDQQYWDGQTQIGQLNEQINRENL'
+       'GIRQRRYNQTGGSHTVQWMFGCDILEDGTIRGYRQSAYDGRDFIALDKDMKTFTAAVPEAVPTKRKWEEESEPERWKNY'
+       'LEETCVEWLRRYVEYGKAELGRRERPEVRVWGKEADGILTLSCRAHGFYPRPIVVSWLKDGAVRGQDAHSGGIVPNGDG'
+       'TYHTWVTIEAQPGDGDKYQCRVEHASLPQPGLYSWKL')
+
+
+def test_other_species():
+    """MHC chains of other species are found, with their species; a human B2M on a
+    pig heavy chain keeps its own species."""
+    t = tcs.detect_chains({'A': SLA1, 'B': B2M, 'C': 'RVEDVTNTAEY', 'X': BF2}, numbering={})
+    assert t['type'].to_dict() == {'A': 'MHC', 'B': 'MHC', 'C': 'peptide', 'X': 'MHC'}
+    assert t['details'].to_dict() == {'A': 'SLA-1', 'B': 'B2M', 'C': '-', 'X': 'BF2'}
+    assert t['species'].to_dict() == {'A': 'pig', 'B': 'human', 'C': '-', 'X': 'chicken'}
+    assert t['new_chain'].to_dict() == {'A': 'A', 'B': 'F', 'C': 'C', 'X': 'G'}
 
 
 def test_class_ii_and_extra_chains():

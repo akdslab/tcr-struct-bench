@@ -15,7 +15,7 @@ dependencies = [
     "scipy>=1.10",
     # ANARCI (IMGT numbering of TCR chains), with a pyhmmer backend: no hmmscan binary;
     # MHC gene matching and annotation (0.1.5: imgt_regions)
-    "tcrkit>=0.1.5",
+    "tcrkit>=0.1.9",
 ]
 
 [project.scripts]
@@ -48,7 +48,7 @@ packages = ["src/tcrstruct"]
 # from GitHub, pinned to a commit. To work on them side by side, install your clones
 # over these: uv pip install -e ../PDBFrame -e ../tcrkit
 pdbframe = { git = "https://github.com/akdslab/PDBFrame.git", rev = "31180efade52b01be8001d3f423a205bd08a310b" }
-tcrkit = { git = "https://github.com/akdslab/tcrkit.git", rev = "77ca612397491c1b211682323c6abebe232681f8" }
+tcrkit = { git = "https://github.com/akdslab/tcrkit.git", rev = "f230ab14b80f57bd92e68ced5cc8506bc38a7f07" }
 
 [dependency-groups]
 dev = [

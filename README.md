@@ -1,16 +1,17 @@
 # tcrstruct
 
 Analyze and annotate TCR-pMHC structures and sequences: which chain is which, the MHC
-gene and allele, the TCR V genes, the CDRs and peptide core, an IMGT label on every
-residue, and how the TCR docks. Then benchmark predicted models against experimental
-structures, and build clean data sets. Use it as a Python library or from the command
-line.
+gene and allele, the species, the TCR V genes, the CDRs and peptide core, an IMGT label
+on every residue, and how the TCR docks. Then benchmark predicted models against
+experimental structures, and build clean data sets. Use it as a Python library or from
+the command line.
 
 ## What is it for?
 
 1. **Understand a TCR-pMHC.** From a structure (PDB, mmCIF) or just its sequences
    (FASTA), find the TCR alpha / beta, MHC, B2M and peptide chains, the MHC gene and
-   allele, the TCR V genes, the CDRs and the peptide core. In a structure, also the
+   allele, the species of the TCR and of the MHC, the TCR V genes, the CDRs and the
+   peptide core. In a structure, also the
    crossing and incident docking angles, CDR-peptide contacts and 3D views with every
    region marked.
    * **The same region in every file.** Each residue gets its IMGT label (TCR V domains
@@ -28,7 +29,7 @@ line.
 | | function | what it does |
 |---|---|---|
 | **analyze** | `TCRFrame.read`, `TCRFrame.from_rcsb` | a structure or FASTA with chains A-F, genes, IMGT labels and regions |
-| | `s.report()`, `s.chain_table`, `s.cdrs`, `s.residues` | chains and genes, CDR sequences, one row per residue with its IMGT label and region |
+| | `s.report()`, `s.chain_table`, `s.cdrs`, `s.residues` | chains, genes and species, CDR sequences, one row per residue with its IMGT label and region |
 | | `s.select(regions=...)`, `s.contact_map()` | region selections (CDRs, peptide core, MHC helices, ...), CDR-peptide contacts |
 | | `s.angles`, `s.view()` | docking angles; 3D views with the regions and docking vectors marked |
 | | `tcs.find_complexes`, `s.verify()` | each copy of the complex in a file; is it a complete complex? |
@@ -48,7 +49,7 @@ PDBFrame, so every PDBFrame method works on it too.
 ## Install
 
 ```bash
-pip install git+https://github.com/akdslab/tcr-struct-bench.git
+pip install git+https://github.com/akdslab/tcrstruct.git
 ```
 
 PDBFrame and tcrkit come with it. ANARCI runs in-process (pyhmmer), so there is no
@@ -65,6 +66,7 @@ from tcrstruct import TCRFrame
 ref = TCRFrame.from_rcsb('1AO7')        # or TCRFrame.read('1ao7.cif'), or '1ao7.fasta'
 print(ref.report())
 # TCRFrame '1AO7', MHC class I, chains A, C, D, E, F
+#   species human (TCR human, MHC human)
 #   A  MHC heavy chain A0201        274 aa   (chain A in the file)
 #   C  peptide                        9 aa   (chain C in the file)
 #   D  TCR alpha       TRAV12-2*01  115 aa   (chain D in the file)
@@ -154,9 +156,7 @@ tcrstruct --help
 |---|---|---|
 | ANARCI (via tcrkit) | TCR IMGT numbering | Dunbar and Deane, *Bioinformatics* 32, 298-300 (2016) |
 | IMGT numbering | TCR and MHC labels | [IMGT](https://www.imgt.org), Lefranc et al. (CC BY 4.0) |
-| DockQ v2 | `DockQ` (default) | Mirabello and Wallner, *Bioinformatics* 40, btae586 (2024) |
-| Pierce lab `tcr_docking_angle` | docking angles (default) | [piercelab/tcr_docking_angle](https://github.com/piercelab/tcr_docking_angle) (CC BY 4.0) |
-| MHC Motif Atlas | `'v1'` helices | [mhcmotifatlas.org](http://mhcmotifatlas.org) |
+| UniProt (via tcrkit) | MHC genes and species | [uniprot.org](https://www.uniprot.org) (CC BY 4.0) |
 | TCR3d | `tcs.sources.tcr3d_*` | [tcr3d.ibbr.umd.edu](https://tcr3d.ibbr.umd.edu) |
 | STCRDab | `tcs.sources.stcrdab` | [STCRDab](https://opig.stats.ox.ac.uk/webapps/stcrdab-stcrpred) |
 | RCSB PDB | structures | [rcsb.org](https://www.rcsb.org) |
@@ -169,7 +169,7 @@ tcrstruct --help
 ## Development
 
 ```bash
-git clone https://github.com/akdslab/tcr-struct-bench.git && cd tcr-struct-bench
+git clone https://github.com/akdslab/tcrstruct.git && cd tcrstruct
 uv sync                  # .venv with PDBFrame and tcrkit at the commits pinned in pyproject.toml
 uv run pytest
 ```

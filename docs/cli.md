@@ -8,8 +8,8 @@ before the command, hides them.
 |---|---|
 | `compare model reference` | scores one model; prints the row, or `-o row.csv` |
 | `compare-dirs models/ references/ -o metrics.csv` | scores every model in a directory, one row each |
-| `info structure` | chains, MHC class and genes, peptide core, CDRs, docking angles |
-| `chains structure` | how each chain was detected, and its new ID |
+| `info structure` | chains, MHC class and genes, species, peptide core, CDRs, docking angles |
+| `chains structure` | how each chain was detected, its species, and its new ID |
 | `verify path [-o checks.csv]` | checks that a file (or each file in a directory) is a complete complex |
 | `normalize input output` | standard chain IDs and IMGT-numbered TCRs, for a file or a directory |
 | `split-peptide input output` | a peptide fused to another chain moved into chain C |

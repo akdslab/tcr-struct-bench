@@ -16,8 +16,8 @@ s                      # TCRFrame '6V0Y', MHC class I, chains A, C, D, E, F
 | what | how |
 |---|---|
 | build | `TCRFrame.read(path)`, `TCRFrame.from_rcsb(id)`, `TCRFrame(pf)`; a multi-copy file gives complex 1, `complex=2` the next; all of them: `tcs.find_complexes(path)` |
-| what it is | `s`, `print(s.report())`, `s.summary()`, `s.mhc_class`, `s.has_tcr` |
-| chains | `s.chains`, `s.chain_table` (role, gene, allele, identity, J gene per chain) |
+| what it is | `s`, `print(s.report())`, `s.summary()`, `s.mhc_class`, `s.has_tcr`, `s.kind`, `s.species` |
+| chains | `s.chains`, `s.chain_table` (role, gene, allele, species, identity, J gene per chain) |
 | sequences | `s.sequences`, `s.sequence('D')`, `s.sequence('peptide_core')`, `s.sequence('CDRB3')`, `s.peptide`, `s.cdrs` |
 | residues, atoms | `s.residues` (with `imgt`, `region`), `s.df` |
 | regions | `s.select(regions='cdr3')`, `s.regions['CDRB3']`, `s.masks['CDRB3']`, `tcs.list_regions()` |
@@ -90,9 +90,12 @@ sequence, and `imgt` for comparing positions across TCRs and MHCs. A plain PDBFr
 | | gives |
 |---|---|
 | `s.chains` | chain IDs, `['A', 'C', 'D', 'E', 'F']` |
-| `s.chain_table` | per chain: `role`, `gene`, `allele`, `identity`, `j_gene`, `j_identity`, `original_chain`, `length`, `sequence`. MHC and B2M: the gene, closest allele and identity to it; TCR: the V gene (`TRAV12-2`), its closest allele (`TRAV12-2*01`) and identity, then the J allele and its identity (ANARCI) |
+| `s.chain_table` | per chain: `role`, `gene`, `allele`, `species`, `identity`, `j_gene`, `j_identity`, `original_chain`, `length`, `sequence`. MHC and B2M: the gene, closest allele, its species and identity to it; TCR: the V gene (`TRAV12-2`), its closest allele (`TRAV12-2*01`), the germline's species and identity, then the J allele and its identity (ANARCI) |
 | `s.mhc_class` | `'I'`, `'II'` or `None` |
 | `s.has_tcr` | both TCR chains present |
+| `s.kind` | `'tcrpmhc'`, `'pmhc'`, `'mhc'`, `'tcr'` (TCR alpha and beta only) or `None`, from the chains present |
+| `s.species` | the complex's species: the TCR's, or the MHC's without a TCR |
+| `s.tcr_species`, `s.mhc_species` | the TCR's (its alpha chain's germline genes: `'human'` or `'mouse'`, the TCR germlines ANARCI has) and the MHC's (chain A's closest MHC sequence: `'human'`, `'mouse'`, `'pig'`, `'chicken'`, ... the species of TCR3d's structures); None if unknown |
 | `s.sequences` | `{chain: sequence}` of the residues with atoms |
 | `s.full_sequences` | `{chain: sequence}` with the unobserved residues: the deposited sequences of an mmCIF file (the same as `s.sequences` for PDB files). From PDBFrame |
 | `s.unobserved` | the rows of `s.residues` without atoms (mmCIF files only), with their `imgt` and `region` |
@@ -256,7 +259,7 @@ warning. CLI: `tcrstruct complexes file.cif [-o dir/]`. Examples: `notebooks/05_
 | | gives |
 |---|---|
 | `s` | one line: name, MHC class, chains |
-| `print(s.report())` | chains with roles and genes, peptide and core, CDRs (what `tcrstruct info` prints) |
+| `print(s.report())` | species, chains with roles and genes, peptide and core, CDRs (what `tcrstruct info` prints) |
 | `s.summary()` | the main facts as a pandas Series |
 
 ## What comes from PDBFrame

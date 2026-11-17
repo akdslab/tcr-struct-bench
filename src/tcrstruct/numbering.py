@@ -42,6 +42,8 @@ class Numbering:
             ``'D'``, ``'G'``, or ``'H'``, ``'K'``, ``'L'`` for antibodies.
         v_gene, j_gene: the closest germline genes, e.g. ``'TRAV12-2*01'``.
         v_identity, j_identity: ANARCI's sequence identity to them (0-1; NaN if none).
+        species: the species of those germline genes, ``'human'`` or ``'mouse'`` (the
+            TCR germlines ANARCI has); ``'-'`` if none.
     """
     labels: list[str]
     residues: str
@@ -51,6 +53,7 @@ class Numbering:
     j_gene: str = '-'
     v_identity: float = float('nan')
     j_identity: float = float('nan')
+    species: str = '-'
 
 
 def run_anarci(sequences: dict[str, str]) -> dict[str, Numbering | None]:
@@ -83,7 +86,8 @@ def run_anarci(sequences: dict[str, str]) -> dict[str, Numbering | None]:
                                chain_type=row['chain_type'],
                                v_gene=row['v_gene'], j_gene=row['j_gene'],
                                v_identity=_number(row.get('v_identity')),
-                               j_identity=_number(row.get('j_identity')))
+                               j_identity=_number(row.get('j_identity')),
+                               species=_text(row.get('germline_species')))
     return out
 
 
@@ -93,6 +97,11 @@ def _number(value) -> float:
         return float(value)
     except (TypeError, ValueError):
         return float('nan')
+
+
+def _text(value) -> str:
+    """`value` as a string, ``'-'`` for a missing value."""
+    return value if isinstance(value, str) and value else '-'
 
 
 def imgt_labels(n_residues: int, numbering: Numbering | None) -> list[str]:

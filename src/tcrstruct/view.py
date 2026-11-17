@@ -49,9 +49,18 @@ VECTOR_COLORS = {'groove_axis': '#1F77B4', 'groove_normal': '#2CA02C',
 _VECTOR_LENGTH = 20.0   # Å, half the drawn length of the axes
 
 
+#: The chain each default region is on.
+_REGION_CHAIN = {'peptide_core': 'C', 'helices': 'A',
+                 **{c: 'D' if c.startswith('CDRA') else 'E' for c in CDRS}}
+
+
 def _marks(pf: PDBFrame, regions, extra_regions, warn_missing: bool = True) -> dict:
-    """``{name: PDBFrame}`` of the named regions of `pf`, plus `extra_regions`."""
+    """``{name: PDBFrame}`` of the named regions of `pf`, plus `extra_regions`. The
+    default set (``regions=True``) leaves out regions on chains `pf` does not have
+    (no CDRs on a pMHC); a region asked for by name is warned about if missing."""
     names = [] if regions is None or regions is False else expand_regions(regions)
+    if regions is True:
+        names = [n for n in names if n not in _REGION_CHAIN or _REGION_CHAIN[n] in pf.chains]
     found = pf.regions
     missing = [n for n in names if n not in found]
     if missing and warn_missing:
@@ -141,7 +150,8 @@ def view(structure, regions=True, extra_regions: dict | None = None,
         structure: a file or PDBFrame (annotated first if needed, so the view
             shows the standard chain IDs).
         regions: which regions to mark - ``True`` (the default set: peptide core,
-            the six CDRs, MHC helices), ``'all'``, a region or group name
+            the six CDRs, MHC helices; those whose chains the structure has, so
+            no CDRs on a pMHC), ``'all'``, a region or group name
             (``'cdrs'``, ``'cdr3'``, ``'tcra'``, ...), a list of these, or ``None``.
             Each can be switched off and on in the viewer's legend.
         extra_regions: more regions to mark, ``{name: spec}`` as for

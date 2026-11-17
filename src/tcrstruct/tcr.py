@@ -9,6 +9,7 @@ about it computed on first use.
     >>> pdb1.df                                # the atom table
     >>> pdb1.residues                          # residue table with 'imgt' and 'region'
     >>> pdb1.chain_table                       # what each chain is, gene / allele, sequence
+    >>> pdb1.species, pdb1.mhc_species         # the TCR's species (the complex's), the MHC's
     >>> pdb1.cdrs, pdb1.sequence('peptide_core'), pdb1.angles
     >>> pdb1.contact_map()                     # CDR residues touching the peptide
     >>> pdb1.docking_angles(method='v1')            # the 'v1' angles
@@ -35,6 +36,7 @@ import pandas as pd
 from pdbframe import PDBFrame
 from pdbframe.structure import deposited
 from pdbframe.structure.selection import select_mask
+from tcrkit.mhc import mhc_species
 
 from . import mhc as _mhc
 from . import regions as _regions
@@ -145,11 +147,12 @@ def list_region_groups() -> pd.DataFrame:
 
 
 @lru_cache(maxsize=1024)
-def _germline(sequence: str) -> tuple[str, float, str, float]:
-    """ANARCI's closest V and J genes of a TCR chain and its identity to each
-    (``'-'`` and NaN if not numbered)."""
+def _germline(sequence: str) -> tuple[str, float, str, float, str]:
+    """ANARCI's closest V and J genes of a TCR chain, its identity to each, and their
+    species (``'-'`` and NaN if not numbered)."""
     n = run_anarci({'chain': sequence})['chain']
-    return (n.v_gene, n.v_identity, n.j_gene, n.j_identity) if n else ('-', np.nan, '-', np.nan)
+    return ((n.v_gene, n.v_identity, n.j_gene, n.j_identity, n.species) if n
+            else ('-', np.nan, '-', np.nan, '-'))
 
 
 def _key(name: str) -> str:
@@ -293,13 +296,14 @@ class TCRFrame(PDBFrame):
 
     @cached_property
     def chain_table(self) -> pd.DataFrame:
-        """One row per chain: ``role``, ``gene``, ``allele``, ``identity``, ``j_gene``,
-        ``j_identity``, ``original_chain``, ``length``, ``sequence``.
+        """One row per chain: ``role``, ``gene``, ``allele``, ``species``, ``identity``,
+        ``j_gene``, ``j_identity``, ``original_chain``, ``length``, ``sequence``.
 
-        MHC and B2M chains: the gene, its closest allele and the identity to that
-        allele over the aligned part (:func:`.mhc.mhc_match`). TCR chains: the V gene
-        (``'TRAV12-2'``), its closest allele (``'TRAV12-2*01'``) and ANARCI's identity
-        to it; then the J allele and its identity. Other chains: ``'-'`` and NaN.
+        MHC and B2M chains: the gene, its closest allele, that allele's species and the
+        identity to it over the aligned part (:func:`.mhc.mhc_match`). TCR chains: the V
+        gene (``'TRAV12-2'``), its closest allele (``'TRAV12-2*01'``), the germline's
+        species and ANARCI's identity to it; then the J allele and its identity. Other
+        chains: ``'-'`` and NaN.
         """
         df = self.df
         rows = []
@@ -307,7 +311,7 @@ class TCRFrame(PDBFrame):
             role = _ROLES.get(chain, 'other')
             if chain == 'A' and self.mhc_class == 'II':
                 role = 'MHC alpha'
-            gene = allele = j_gene = '-'
+            gene = allele = j_gene = species = '-'
             identity = j_identity = np.nan
             if chain in ('A', 'B', 'F'):
                 match = _mhc.mhc_match(seq)
@@ -315,13 +319,14 @@ class TCRFrame(PDBFrame):
                                 for x in (match['gene'], match['allele']))
                 if gene != '-':
                     identity = float(match['allele_identity'])
+                    species = mhc_species(allele) or '-'
             elif chain in ('D', 'E'):
-                allele, identity, j_gene, j_identity = _germline(seq)
+                allele, identity, j_gene, j_identity, species = _germline(seq)
                 gene = allele.split('*')[0]
             original = (df.loc[df['chain'] == chain, 'original_chain'].iloc[0]
                         if 'original_chain' in df else chain)
             rows.append({'chain': chain, 'role': role, 'gene': gene, 'allele': allele,
-                         'identity': identity, 'j_gene': j_gene, 'j_identity': j_identity,
+                         'species': species, 'identity': identity, 'j_gene': j_gene, 'j_identity': j_identity,
                          'original_chain': original, 'length': len(seq), 'sequence': seq})
         return pd.DataFrame(rows).set_index('chain')
 
@@ -334,6 +339,45 @@ class TCRFrame(PDBFrame):
     @property
     def has_tcr(self) -> bool:
         return {'D', 'E'} <= set(self.chains)
+
+    @property
+    def kind(self) -> str | None:
+        """What the structure is, from its chains: ``'tcrpmhc'`` (TCR, MHC and peptide),
+        ``'pmhc'`` (MHC and peptide), ``'mhc'``, ``'tcr'`` (TCR alpha and beta only), or
+        None for anything else."""
+        chains = set(self.chains)
+        mhc, peptide = 'A' in chains, 'C' in chains
+        if self.has_tcr:
+            return 'tcrpmhc' if mhc and peptide else 'tcr' if not (mhc or peptide) else None
+        if mhc:
+            return 'pmhc' if peptide else 'mhc'
+        return None
+
+    @property
+    def mhc_species(self) -> str | None:
+        """The MHC's species: that of chain A's closest MHC sequence (B's, then the
+        B2M's, without an A), e.g. ``'human'``, ``'mouse'``, ``'pig'``; None if unknown."""
+        return self._species_of('A', 'B', 'F')
+
+    @property
+    def tcr_species(self) -> str | None:
+        """The TCR's species: that of the alpha chain's germline genes (the beta's,
+        without an alpha), ``'human'`` or ``'mouse'``, the TCR germlines ANARCI has;
+        None without a TCR."""
+        return self._species_of('D', 'E')
+
+    @property
+    def species(self) -> str | None:
+        """The complex's species: the TCR's (:attr:`tcr_species`), or the MHC's for a
+        structure without a TCR."""
+        return self.tcr_species or self.mhc_species
+
+    def _species_of(self, *chains: str) -> str | None:
+        ch = self.chain_table
+        for c in chains:
+            if c in ch.index and ch.at[c, 'species'] != '-':
+                return ch.at[c, 'species']
+        return None
 
     @cached_property
     def residues(self) -> pd.DataFrame:
@@ -590,7 +634,8 @@ class TCRFrame(PDBFrame):
                                                     ('D', 'TRAV'), ('E', 'TRBV')]
                  if c in ch.index}
         return pd.Series({
-            'name': self.name, 'mhc_class': self.mhc_class, **genes,
+            'name': self.name, 'mhc_class': self.mhc_class, 'species': self.species,
+            'tcr_species': self.tcr_species, 'mhc_species': self.mhc_species, **genes,
             'peptide': self.peptide, 'peptide_core': self.peptide_core_sequence,
             **self.cdrs, **(self.angles if self.has_tcr else {}),
             'chains': ', '.join(f'{c}={r}' for c, r in ch['role'].items()),
@@ -612,6 +657,10 @@ class TCRFrame(PDBFrame):
         its core, and the CDRs (what ``tcrstruct info`` prints)."""
         ch = self.chain_table
         lines = [self._summary()]
+        if self.species:
+            parts = [f'{k} {v}' for k, v in (('TCR', self.tcr_species),
+                                             ('MHC', self.mhc_species)) if v]
+            lines.append(f'  species {self.species} ({", ".join(parts)})')
         for chain, r in ch.iterrows():
             gene = '' if r['allele'] in ('-', None) else r['allele']
             lines.append(f'  {chain}  {r["role"]:<16}{gene:<12}{r["length"]:>4} aa'

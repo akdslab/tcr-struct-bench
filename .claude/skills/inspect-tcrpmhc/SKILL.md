@@ -10,8 +10,9 @@ import tcrstruct as tcs
 from tcrstruct import TCRFrame
 pdb1 = TCRFrame.read('7n2n.pdb')     # or TCRFrame.from_rcsb('7N2N'); a PDBFrame, annotated
 pdb1                                 # name, MHC class, chains
-print(pdb1.report())                 # chains (gene/allele), peptide, core, CDRs
-pdb1.chain_table                     # role, gene, allele, identity, j_gene, j_identity, ...
+print(pdb1.report())                 # species, chains (gene/allele), peptide, core, CDRs
+pdb1.chain_table                     # role, gene, allele, species, identity, j_gene, ...
+pdb1.species, pdb1.tcr_species, pdb1.mhc_species   # the complex's is the TCR's
 pdb1.cdrs, pdb1.sequence('peptide_core'), pdb1.angles, pdb1.mhc_class
 pdb1.contact_map()                   # CDR residues within 5 Å of the peptide (grid=True: a grid)
 tcs.plot_contact_map(pdb1)           # ... as a heatmap; peptide positions count from the core

@@ -111,8 +111,19 @@ def test_repr_and_summary(class_i):
     assert 'masks' not in class_i.select(chains='C').__dict__   # nothing computed to show it
     text = class_i.report()
     assert 'MHC class I' in text and 'LLFGYPVYV' in text and 'CDRB3=ASRPGLAGGRPEQY' in text
+    assert '  species human (TCR human, MHC human)' in text.splitlines()
     s = class_i.summary()
     assert s['mhc_class'] == 'I' and s['CDRA3'] == class_i.cdrs['CDRA3']
+    assert s[['species', 'tcr_species', 'mhc_species']].tolist() == ['human'] * 3
+
+
+def test_species(class_i):
+    assert class_i.chain_table['species'].to_dict() == {
+        'A': 'human', 'C': '-', 'D': 'human', 'E': 'human', 'F': 'human'}
+    mouse = TCRFrame.read(DATA / '3QIB' / 'rcsb.pdb')          # I-Ek, a mouse TCR
+    assert (mouse.species, mouse.tcr_species, mouse.mhc_species) == ('mouse',) * 3
+    pmhc = class_i.select(chains=['A', 'C', 'F'])               # no TCR: the MHC's
+    assert (pmhc.species, pmhc.tcr_species, pmhc.mhc_species) == ('human', None, 'human')
 
 
 def test_tcr_compare_matches_compare(class_i):
@@ -262,6 +273,19 @@ def test_missing_region_warns(class_i):
         warnings.simplefilter('always')
         tcs.view(pep_only, regions='cdrs')
     assert any('no' in str(w.message) and 'CDRA1' in str(w.message) for w in caught)
+
+
+def test_kind_and_pmhc_view(class_i, tmp_path):
+    """A pMHC knows it has no TCR: its default view marks no CDRs and warns about nothing;
+    CDRs asked for by name are still warned about."""
+    class_i.select(chains=['A', 'C', 'F']).write(tmp_path / 'pmhc.pdb')
+    pmhc = TCRFrame.read(tmp_path / 'pmhc.pdb', name='pmhc')
+    assert (class_i.kind, pmhc.kind) == ('tcrpmhc', 'pmhc')
+    with warnings.catch_warnings():
+        warnings.simplefilter('error', tcs.TCRStructWarning)
+        pmhc.view()
+    with pytest.warns(tcs.TCRStructWarning, match='CDRA1'):
+        pmhc.view(regions='cdrs')
 
 
 # --------------------------------------------------------------- orientation

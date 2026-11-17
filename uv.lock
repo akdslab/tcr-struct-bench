@@ -2397,8 +2397,8 @@ wheels = [
 
 [[package]]
 name = "tcrkit"
-version = "0.1.5"
-source = { git = "https://github.com/akdslab/tcrkit.git?rev=77ca612397491c1b211682323c6abebe232681f8#77ca612397491c1b211682323c6abebe232681f8" }
+version = "0.1.10"
+source = { git = "https://github.com/akdslab/tcrkit.git?rev=f230ab14b80f57bd92e68ced5cc8506bc38a7f07#f230ab14b80f57bd92e68ced5cc8506bc38a7f07" }
 dependencies = [
     { name = "anarci" },
     { name = "biopython" },
@@ -2447,7 +2447,7 @@ requires-dist = [
     { name = "pandas", specifier = ">=3.0" },
     { name = "pdbframe", git = "https://github.com/akdslab/PDBFrame.git?rev=31180efade52b01be8001d3f423a205bd08a310b" },
     { name = "scipy", specifier = ">=1.10" },
-    { name = "tcrkit", git = "https://github.com/akdslab/tcrkit.git?rev=77ca612397491c1b211682323c6abebe232681f8" },
+    { name = "tcrkit", git = "https://github.com/akdslab/tcrkit.git?rev=f230ab14b80f57bd92e68ced5cc8506bc38a7f07" },
     { name = "tqdm", marker = "extra == 'progress'", specifier = ">=4.60" },
 ]
 provides-extras = ["progress"]

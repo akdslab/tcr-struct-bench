@@ -13,6 +13,11 @@ Chains are identified by these rules:
   than 0.07 per residue (score divided by the longer sequence).
 - **peptide**: the remaining chains of 1-27 standard residues.
 
+Each TCR, MHC and B2M chain also gets a **species**: the MHC's is that of its closest
+sequence in tcrkit (human, mouse and the other species of TCR3d's structures:
+macaque, pig, cattle, chicken, ...), the TCR's that of its ANARCI germline genes
+(human or mouse, the only TCR germlines ANARCI has).
+
 and renamed (:data:`CHAIN_IDS`): A (MHC heavy / class II alpha), B (class II beta),
 C (peptide), D (TCR alpha), E (TCR beta), F (B2M); any other chain becomes G, H, ...
 A class I molecule needs its heavy chain or B2M, a class II one both of its chains.
@@ -32,7 +37,7 @@ import numpy as np
 import pandas as pd
 from pdbframe import PDBFrame
 from pdbframe.structure import deposited
-from tcrkit.mhc import best_mhc, gene_domains, mhc_chain
+from tcrkit.mhc import best_mhc, gene_domains, mhc_chain, mhc_species
 
 from ._warnings import warn
 from .mhc import mhc_annotation
@@ -63,8 +68,8 @@ def detect_chains(pf, numbering: dict[str, Numbering | None] | None = None
     """What each chain of a TCR-pMHC (or pMHC) structure is, and its standard ID.
 
     >>> detect_chains({'H': hla_a2, 'L': b2m, 'P': 'LLFGYPVYV', 'Q': alpha, 'R': beta})
-    #   type  details  new_chain  sequence
-    # H  MHC        A          A  GSHSMRYF...
+    #   type  details  new_chain  species  sequence
+    # H  MHC        A          A    human  GSHSMRYF...
 
     Args:
         pf: the structure (a PDBFrame), or just its sequences, ``{chain: sequence}``
@@ -78,8 +83,9 @@ def detect_chains(pf, numbering: dict[str, Numbering | None] | None = None
         ``type`` (``'TCR'``, ``'MHC'``, ``'peptide'`` or ``'None'``), ``details``
         (``'Alpha'`` / ``'Beta'`` for TCRs, or ANARCI's chain type for other
         receptors, e.g. ``'D'``; the gene for MHC chains, e.g. ``'A'`` or ``'DRB1'``;
-        ``'-'`` otherwise), ``new_chain`` (the standard ID, :data:`CHAIN_IDS`) and
-        ``sequence``.
+        ``'-'`` otherwise), ``new_chain`` (the standard ID, :data:`CHAIN_IDS`),
+        ``species`` (of the closest MHC / B2M sequence, or of the TCR germline genes
+        ANARCI assigns; ``'-'`` for other chains) and ``sequence``.
     """
     if isinstance(pf, pd.Series):
         pf = pf.to_dict()
@@ -95,13 +101,14 @@ def detect_chains(pf, numbering: dict[str, Numbering | None] | None = None
     numbering = run_anarci(seqs) if numbering is None else numbering
     tcr = {c: n.chain_type for c, n in numbering.items() if n is not None and c in seqs}
 
-    mhc = {}
+    mhc, species = {}, {c: numbering[c].species for c in tcr}
     for c, s in seqs.items():
         if c in tcr or len(s) < _MHC_MIN_LENGTH:
             continue
-        gene, _, score = best_mhc(s)
+        gene, allele, score = best_mhc(s)
         if gene is not None and score > _MHC_MIN_SCORE:
             mhc[c] = gene
+            species[c] = mhc_species(allele) or '-'
     peptide = [c for c, s in seqs.items() if c not in tcr and c not in mhc
                and 0 < len(s) <= _PEPTIDE_MAX_LENGTH and set(s.upper()) <= _PEPTIDE_LETTERS]
 
@@ -111,7 +118,8 @@ def detect_chains(pf, numbering: dict[str, Numbering | None] | None = None
                      'peptide' if c in peptide else 'None' for c in table.index]
     table['details'] = [tcr_type.get(c) or mhc.get(c) or '-' for c in table.index]
     table['new_chain'] = _standard_ids(table)
-    return table[['type', 'details', 'new_chain', 'sequence']]
+    table['species'] = [species.get(c, '-') for c in table.index]
+    return table[['type', 'details', 'new_chain', 'species', 'sequence']]
 
 
 def _standard_ids(table: pd.DataFrame) -> list[str]:

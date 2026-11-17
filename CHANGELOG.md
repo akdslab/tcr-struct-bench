@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.1 - 2026-11-17
+
+- The species of the TCR and of the MHC (human, mouse and, for the MHC, the 20 other
+  species of TCR3d's structures), in `detect_chains`, `chain_table` and `s.species`.
+- `s.kind` (`'tcrpmhc'`, `'pmhc'`, ...); a pMHC's `view()` marks no CDRs and does not warn.
+- The repository is now `akdslab/tcrstruct` (was `tcr-struct-bench`); needs tcrkit 0.1.9.
+
 ## 0.2.0 - 2026-11-13
 
 First public release.
