@@ -13,6 +13,7 @@ table = tcs.compare_models({'af3': 'af3.cif', 'boltz': 'boltz.pdb'}, ref)   # on
 tcs.compare(model, ref, grouped=True)['docking']                             # one group of columns
 tcs.compare(model, ref, align_on=['peptide_centric', 'pmhc'])                # two superpositions
 table = tcs.compare_dirs('predictions/', 'references/', n_jobs=8)           # whole folders
+table = tcs.compare_dirs('predictions/', 'references/', existing='metrics.csv')  # only new pairs
 tcs.per_residue_lddt(model, ref, by='region')                                # which parts are off
 ```
 

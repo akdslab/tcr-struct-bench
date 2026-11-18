@@ -40,7 +40,7 @@ tcrstruct normalize raw/ clean/
 numbered by IMGT; residues before the V domain are dropped unless `keep_leader=True`.
 
 **Structure checks** (warnings): chain breaks (with the region, e.g. a CDR3 gap), the
-conserved TCR residues (Cys23, Trp41, Cys104, Phe/Trp118) and, in normalized files, the
+MHC's groove disulfide (Cys11/Cys74 of G-ALPHA2 or G-BETA), the conserved TCR residues (Cys23, Trp41, Cys104, Phe/Trp118) and, in normalized files, the
 TCR numbering against the recomputed IMGT.
 
 **Quick checks:** `pf.verify()` (a TCRFrame) gives a table; `as_bool=True` gives True / False.

@@ -24,7 +24,7 @@ af3-tbm, boltz-2 and tcrmodel2 models, and chains that only partly match.
   `per_residue_lddt`, `compare_models`, unobserved residues and the CLI settings file.
 - `test_complexes.py`: the two copies of 2E7L found by contacts, reading one by default
   (`complex=`), `split`, and the structure checks of `verify` (copies, one complex, chain
-  breaks, TCR anchors, TCR numbering).
+  breaks, MHC anchors, TCR anchors, TCR numbering).
 - `test_tcr.py`: both angle methods, pinned, and `'piercelab'` against the Pierce lab's
   tool.
 

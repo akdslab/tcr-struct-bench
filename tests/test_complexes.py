@@ -159,6 +159,17 @@ def test_tcr_anchors():
     assert tcs.is_valid(no_cys)                     # structure checks only warn
 
 
+@pytest.mark.parametrize('pdb, chain, number', [('1AO7', 'A', 164), ('3QIB', 'B', 79)])
+def test_mhc_anchors(pdb, chain, number):
+    s = TCRFrame.read(DATA / pdb / 'rcsb.pdb', name=pdb)
+    v = tcs.verify(s).set_index('check')
+    assert v.at['MHC anchors', 'status'] == 'ok'
+    no_cys = s.select(mask=~(s.df['chain'].eq(chain) & s.df['residue_number'].eq(number)).to_numpy())
+    v = tcs.verify(no_cys).set_index('check')
+    assert v.at['MHC anchors', 'status'] == 'warning'
+    assert f'{chain} ' in v.at['MHC anchors', 'detail'] and '74: missing' in v.at['MHC anchors', 'detail']
+
+
 def test_tcr_numbering(tmp_path):
     raw = DATA / '7T2D' / 'af3-tbm.cif'
     assert 'not IMGT numbered' in tcs.verify(raw).set_index('check').at['TCR numbering', 'detail']
@@ -178,7 +189,7 @@ def test_tcr_numbering(tmp_path):
 
 def test_structure_checks_can_be_skipped():
     v = tcs.verify(DATA / '1AO7' / 'rcsb.pdb', structure_checks=False)
-    assert not {'chain breaks', 'TCR anchors', 'TCR numbering'} & set(v['check'])
+    assert not {'chain breaks', 'MHC anchors', 'TCR anchors', 'TCR numbering'} & set(v['check'])
 
 
 # ---------------------------------------------------------------- TCR docking

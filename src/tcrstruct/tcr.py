@@ -698,6 +698,13 @@ class TCRFrame(PDBFrame):
         from .view import view
         return view(self, regions=regions, **kwargs)
 
+    def sequence_view(self, regions=True, **kwargs):
+        """The chains' sequences with their regions marked (peptide core, CDRs, MHC
+        helices); a *Show 3D* button opens the structure under them. ``view(...,
+        sequence_only=True)``; see :func:`.view.view`. For the same as a table:
+        :attr:`residues`."""
+        return self.view(regions=regions, sequence_only=True, **kwargs)
+
     def tcr_up(self) -> TCRFrame:
         """A copy whose coordinates are turned TCR up, peptide left to right, MHC below
         (see :func:`.angles.tcr_up_orientation`); ``view(tcr_up=True)`` shows the

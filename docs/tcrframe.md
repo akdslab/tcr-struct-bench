@@ -23,7 +23,7 @@ s                      # TCRFrame '6V0Y', MHC class I, chains A, C, D, E, F
 | regions | `s.select(regions='cdr3')`, `s.regions['CDRB3']`, `s.masks['CDRB3']`, `tcs.list_regions()` |
 | contacts | `s.contact_map()` (CDRs x peptide), `s.contact_map(grid=True)`, `tcs.plot_contact_map(s)`, `s.cdr_contacts()` (per CDR) |
 | docking angles | `s.angles`, `s.docking_angles('v1')`, `s.docking_vectors()` |
-| 3D | `s.view()`, `s.view(vectors=True)`, `tcs.view_comparison(models, s)` |
+| 3D | `s.view()`, `s.view(vectors=True)`, `s.sequence_view()`, `tcs.view_comparison(models, s)` |
 | score a model | `s.compare(reference)`; see [metrics.md](metrics.md) |
 | check, fix, write | `s.verify()`, `s.split_fused_peptide()`, `s.normalize()`, `s.split(out_dir=)`, `s.write(path)` |
 
@@ -194,6 +194,7 @@ Each part can be set on its own:
 | | |
 |---|---|
 | `s.view()` | 3D view with the peptide core, CDRs and MHC helices marked; legend toggles, sequence panel, *TCR up* / *Groove from above* buttons |
+| `s.sequence_view()` | the sequences with the same regions marked, no 3D until *Show 3D* is clicked (`view(sequence_only=True)`); `s.residues` is the same as a table |
 | `s.view(regions='all', hidden_regions=['peptide_centric'])` | which regions to mark, and which start switched off |
 | `s.view(vectors=True)` | add the docking-angle vectors, labelled with the angles (`vectors='v1'` for that method) |
 | `s.view(tcr_up=True)` | open turned TCR up, peptide left to right. Only the camera turns; by default the view shows the file's coordinates as they are |
@@ -213,7 +214,7 @@ is, the superposition (`align_on=`, `align_atoms=`) and the `'v1'` settings are 
 
 | | gives |
 |---|---|
-| `s.verify()` | one row per check: MHC class, required chains (a missing B2M is a warning; `require_b2m=True` makes it a failure), peptide, copies, extra chains, contacts, TCR docking (warns when few CDRs touch the pMHC, few CDR residues the peptide, or the TCR is reverse-docked), chain breaks, TCR anchor residues (Cys23, Trp41, Cys104, Phe/Trp118), TCR numbering. `kind='pmhc'` for no TCR; `complex=` which copy; `structure_checks=False` skips the last three |
+| `s.verify()` | one row per check: MHC class, required chains (a missing B2M is a warning; `require_b2m=True` makes it a failure), peptide, copies, extra chains, contacts, TCR docking (warns when few CDRs touch the pMHC, few CDR residues the peptide, or the TCR is reverse-docked), chain breaks, MHC anchor residues (the groove disulfide, Cys11/Cys74 of G-ALPHA2 or G-BETA), TCR anchor residues (Cys23, Trp41, Cys104, Phe/Trp118), TCR numbering. `kind='pmhc'` for no TCR; `complex=` which copy; `structure_checks=False` skips the last four |
 | `s.cdr_contacts()` | per CDR: closest distance to the peptide and the MHC, and its residues touching each |
 | `s.is_valid()` | True if nothing failed |
 | `s.find_fused_peptide()` | a peptide fused to another chain (e.g. 6XCP: peptide on MHC beta) |

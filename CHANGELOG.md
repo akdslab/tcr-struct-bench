@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.2 - 2026-11-18
+
+- `compare_dirs(..., existing='metrics.csv')` (CLI `compare-dirs --resume`) scores only
+  the pairs not already in that file; `verify` checks the MHC groove disulfide (Cys11 /
+  Cys74 of G-ALPHA2 or G-BETA); `s.sequence_view()` shows the annotated sequences first.
+- Needs PDBFrame 0.2.1 and tcrkit 0.1.11: MHC alleles now come from tcrkit's MHC Motif
+  Atlas search (the same on the test structures; the first use downloads it).
+
 ## 0.2.1 - 2026-11-17
 
 - The species of the TCR and of the MHC (human, mouse and, for the MHC, the 20 other

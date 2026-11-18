@@ -257,13 +257,20 @@ def compare_models(models, reference, grouped: bool = False, **kwargs) -> pd.Dat
 
 def compare_dirs(model_dir: str | Path, reference_dir: str | Path, n_jobs: int = 1,
                  key: Callable[[Path], str] = pdb_key, exclude: tuple[str, ...] = (),
-                 progress: bool = False, **kwargs) -> pd.DataFrame:
+                 progress: bool = False, existing: str | Path | pd.DataFrame | None = None,
+                 **kwargs) -> pd.DataFrame:
     """Score every model under `model_dir` against its reference in `reference_dir`.
 
     Models are paired by `key` (default :func:`pdb_key`, so ``7N2N_model_*`` all
     go to the 7N2N reference). Models without a reference are skipped with a
     warning and listed in ``result.attrs['unmatched']``. See :func:`compare_pairs`
     for the other arguments and the result.
+
+    Args:
+        existing: an earlier result (a CSV file or table) to carry on from: pairs
+            already in it (same model and reference file) are not scored again, and
+            the result is its rows followed by the new ones. A file that does not
+            exist yet counts as empty.
     """
     models = find_structures(model_dir, exclude=exclude)
     refs = find_structures(reference_dir)
@@ -271,9 +278,45 @@ def compare_dirs(model_dir: str | Path, reference_dir: str | Path, n_jobs: int =
     if unmatched:
         shown = ', '.join(p.name for p in unmatched[:5]) + (' ...' if len(unmatched) > 5 else '')
         warn(f'{len(unmatched)} models have no reference in {reference_dir}: {shown}')
+    done = _existing(existing)
+    if len(done) and kwargs.get('grouped'):
+        raise ValueError('existing= needs the flat table; drop grouped=True and group after')
+    if len(done):
+        scored = set(zip(_resolved(done['model_file']), _resolved(done['reference_file'])))
+        todo = [(m, r) not in scored for m, r in
+                zip(_resolved(pairs['model_file']), _resolved(pairs['reference_file']))]
+        pairs = pairs[todo]
     table = compare_pairs(pairs, n_jobs=n_jobs, progress=progress, **kwargs)
+    if len(done):
+        attrs = table.attrs
+        table = pd.concat([done, table], ignore_index=True) if len(table) else done
+        table.attrs = {**done.attrs, **attrs}
     table.attrs['unmatched'] = [str(p) for p in unmatched]
+    table.attrs['skipped'] = len(done)
     return table
+
+
+def _existing(existing) -> pd.DataFrame:
+    """The rows of an earlier result, or an empty table."""
+    if existing is None:
+        return pd.DataFrame()
+    if isinstance(existing, pd.DataFrame):
+        return existing
+    path = Path(existing)
+    if not path.exists():
+        return pd.DataFrame()
+    table = _numeric(pd.read_csv(path))
+    for column in ('error', 'warnings'):
+        if column in table:
+            table[column] = table[column].fillna('')
+    missing = {'model_file', 'reference_file'} - set(table.columns)
+    if missing:
+        raise ValueError(f'{path} has no {sorted(missing)} columns; is it a compare_dirs result?')
+    return table
+
+
+def _resolved(paths) -> list[str]:
+    return [str(Path(p).resolve()) for p in paths]
 
 
 def key_pattern(pattern: str) -> Callable[[Path], str]:

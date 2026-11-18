@@ -96,7 +96,8 @@ def _compare_dirs(args):
     key = key_pattern(args.key_pattern) if args.key_pattern else pdb_key
     settings = _methods(args)
     table = compare_dirs(args.model_dir, args.reference_dir, n_jobs=args.jobs, key=key,
-                         exclude=tuple(args.exclude), progress=True, **settings)
+                         exclude=tuple(args.exclude), progress=True,
+                         existing=args.output if args.resume else None, **settings)
     table.to_csv(args.output, index=False)
     extra = _save_settings(args.output, settings, table.attrs['versions'])
     failed = (table['error'] != '').sum()
@@ -295,6 +296,8 @@ def _parser() -> argparse.ArgumentParser:
     q.add_argument('-o', '--output', required=True, help='CSV file')
     q.add_argument('-j', '--jobs', type=int, default=1, help='processes (-1: all CPUs)')
     q.add_argument('--key-pattern', help='regex whose first group is the PDB ID in a file name')
+    q.add_argument('--resume', action='store_true',
+                   help='keep the pairs already in --output, score only the others')
     q.add_argument('--exclude', nargs='*', default=[],
                    help='skip model sub-directories with these names (e.g. rcsb)')
     scoring(q)

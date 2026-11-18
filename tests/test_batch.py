@@ -86,6 +86,24 @@ def test_compare_dirs(dirs, n_jobs):
     assert table['DockQ'].dtype == float and table['peptide_reversed'].dtype == 'boolean'
 
 
+def test_compare_dirs_resumes(dirs, tmp_path):
+    """Pairs already in an earlier result are kept, not scored again."""
+    out = tmp_path / 'metrics.csv'
+    first = compare_dirs(dirs / 'models', dirs / 'refs', exclude=('boltz',), **V1)
+    first.to_csv(out, index=False)
+    with pytest.warns(TCRStructWarning, match='no reference'):
+        table = compare_dirs(dirs / 'models', dirs / 'refs', existing=out, **V1)
+    assert table.attrs['skipped'] == 1
+    assert list(table['model']) == ['7T2D_model_0', '7t2d_model_1']
+    assert (table['error'] == '').all()
+    assert table['DockQ'].iat[0] == pytest.approx(first['DockQ'].iat[0], rel=1e-9)
+    assert table['DockQ'].iat[1] == pytest.approx(_expected('boltz-2')['DockQ'], rel=1e-4)
+    # a file that does not exist yet is an empty start
+    with pytest.warns(TCRStructWarning, match='no reference'):
+        fresh = compare_dirs(dirs / 'models', dirs / 'refs', existing=tmp_path / 'new.csv', **V1)
+    assert fresh.attrs['skipped'] == 0 and len(fresh) == 2
+
+
 # ---------------------------------------------------------------- normalizing
 
 def test_normalize(tmp_path):

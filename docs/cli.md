@@ -26,6 +26,7 @@ tcrstruct compare model.cif reference.cif
 tcrstruct compare-dirs predictions/ references/ -o metrics.csv -j 8
 tcrstruct compare-dirs predictions/ references/ -o metrics.csv --align-on peptide_centric pmhc
 tcrstruct compare-dirs predictions/ references/ -o metrics.csv --v1
+tcrstruct compare-dirs predictions/ references/ -o metrics.csv --resume   # only new pairs
 ```
 
 `compare` and `compare-dirs` take the same scoring options; [metrics.md](metrics.md)
@@ -45,7 +46,8 @@ explains each:
 4 letters of the file name (`af3/7N2N_model_0.cif` goes with `7N2N.cif`); `--key-pattern
 REGEX` takes it from the regex's first group instead. The `method` column is the
 sub-directory; `--exclude rcsb` skips sub-directories by name; `-j` runs pairs in
-parallel (`-1`: every CPU). Next to the CSV, `metrics.settings.json` records the options
+parallel (`-1`: every CPU); `--resume` keeps the pairs already in the `-o` file and
+scores only the others. Next to the CSV, `metrics.settings.json` records the options
 and package versions.
 
 ## Structures

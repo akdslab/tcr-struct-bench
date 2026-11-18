@@ -38,6 +38,8 @@ Checks, each ``'ok'``, ``'warning'`` or ``'fail'``:
   - chain breaks: consecutive Cα atoms more than 4.2 Å apart in chains A-F, with
     the fewest residues that can be missing (the gap over 3.8 Å per residue) and the
     region they fall in;
+  - MHC anchors: the disulfide cysteines of the second groove domain, Cys 11 and
+    Cys 74 of G-ALPHA2 (class I) or G-BETA (class II), at their IMGT G-domain positions;
   - TCR anchors: the conserved IMGT residues of each V domain, Cys 23, Trp 41,
     Cys 104 and Phe / Trp 118 (Cys 23 and 104 orient the docking angles);
   - TCR numbering: whether the file's residue numbers are IMGT; if they are (a
@@ -173,6 +175,9 @@ BREAK_DISTANCE = 4.2
 #: The conserved residues of a TCR V domain: IMGT position -> allowed amino acids.
 TCR_ANCHORS = {'23': 'C', '41': 'W', '104': 'C', '118': 'FW'}
 
+#: The groove-domain disulfide of the MHC: class -> (chain, G domain, IMGT positions).
+MHC_ANCHORS = {'I': ('A', 'G-ALPHA2', ('11', '74')), 'II': ('B', 'G-BETA', ('11', '74'))}
+
 
 def _one_complex(pf) -> dict:
     """Whether the chains annotated A-F are one complex of the file (by contacts)."""
@@ -239,6 +244,27 @@ def _anchors(pf) -> dict:
         return _row('TCR anchors', 'ok', 'Cys23, Trp41, Cys104, Phe/Trp118 in both V domains')
     return _row('TCR anchors', 'warning', '; '.join(problems) + ' (a missing Cys23 or Cys104 '
                 'leaves the docking angles NaN; check the V-domain numbering)')
+
+
+def _mhc_anchors(pf) -> dict:
+    """The disulfide cysteines of the MHC's second groove domain (:data:`MHC_ANCHORS`)."""
+    from .mhc import mhc_numbering
+    chain, domain, positions = MHC_ANCHORS[pf.mhc_class]
+    num = mhc_numbering(pf)
+    num = num[(num['chain'] == chain) & (num['domain'] == domain)]
+    seen = {(r, i.strip()) for r, i in _observed(pf).query('chain == @chain')[
+        ['residue_number', 'insertion_code']].itertuples(index=False)}
+    num = num[[(r, i.strip()) in seen for r, i in
+               zip(num['residue_number'], num['insertion_code'].fillna(''))]]
+    aa = num.drop_duplicates('imgt').set_index('imgt')['aa']
+    problems = [f'{chain} {domain} {pos}: ' + ('missing' if aa.get(pos) is None else
+                                                f'{aa.get(pos)}, not C')
+                for pos in positions if aa.get(pos) != 'C']
+    what = f'Cys{positions[0]}, Cys{positions[1]} of {domain} (chain {chain})'
+    if not problems:
+        return _row('MHC anchors', 'ok', f'{what}, the groove disulfide')
+    return _row('MHC anchors', 'warning', '; '.join(problems) + f' (expected {what}; '
+                'check the MHC chain, or its G-domain numbering with tcs.mhc_numbering)')
 
 
 def _numbering(pf) -> dict:
@@ -363,6 +389,8 @@ def verify(structure, kind: str = 'tcrpmhc', require_b2m: bool = False,
         rows += _contacts(pf, kind, cutoff)
     if structure_checks and not is_seq:
         rows.append(_breaks(pf))
+        if pf.mhc_class:
+            rows.append(_mhc_anchors(pf))
         if {'D', 'E'} & present:
             rows += [_anchors(pf), _numbering(pf)]
     out = pd.DataFrame(rows, columns=['check', 'status', 'detail'])

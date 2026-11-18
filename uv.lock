@@ -1606,8 +1606,8 @@ wheels = [
 
 [[package]]
 name = "pdbframe"
-version = "0.2.0"
-source = { git = "https://github.com/akdslab/PDBFrame.git?rev=31180efade52b01be8001d3f423a205bd08a310b#31180efade52b01be8001d3f423a205bd08a310b" }
+version = "0.2.1"
+source = { git = "https://github.com/akdslab/PDBFrame.git?rev=383ff151ce4c0ae8fc19b21a43cdb52445878b9b#383ff151ce4c0ae8fc19b21a43cdb52445878b9b" }
 dependencies = [
     { name = "biopython" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
@@ -2397,8 +2397,8 @@ wheels = [
 
 [[package]]
 name = "tcrkit"
-version = "0.1.10"
-source = { git = "https://github.com/akdslab/tcrkit.git?rev=f230ab14b80f57bd92e68ced5cc8506bc38a7f07#f230ab14b80f57bd92e68ced5cc8506bc38a7f07" }
+version = "0.1.11"
+source = { git = "https://github.com/akdslab/tcrkit.git?rev=22ca488ffc0a9a2d04f5d44af121ebd86b8a708b#22ca488ffc0a9a2d04f5d44af121ebd86b8a708b" }
 dependencies = [
     { name = "anarci" },
     { name = "biopython" },
@@ -2445,9 +2445,9 @@ requires-dist = [
     { name = "biopython", specifier = ">=1.80" },
     { name = "numpy", specifier = ">=1.24" },
     { name = "pandas", specifier = ">=3.0" },
-    { name = "pdbframe", git = "https://github.com/akdslab/PDBFrame.git?rev=31180efade52b01be8001d3f423a205bd08a310b" },
+    { name = "pdbframe", git = "https://github.com/akdslab/PDBFrame.git?rev=383ff151ce4c0ae8fc19b21a43cdb52445878b9b" },
     { name = "scipy", specifier = ">=1.10" },
-    { name = "tcrkit", git = "https://github.com/akdslab/tcrkit.git?rev=f230ab14b80f57bd92e68ced5cc8506bc38a7f07" },
+    { name = "tcrkit", git = "https://github.com/akdslab/tcrkit.git?rev=22ca488ffc0a9a2d04f5d44af121ebd86b8a708b" },
     { name = "tqdm", marker = "extra == 'progress'", specifier = ">=4.60" },
 ]
 provides-extras = ["progress"]

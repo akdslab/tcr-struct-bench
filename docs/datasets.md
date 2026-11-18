@@ -74,7 +74,8 @@ this order:
    paired): drop the entry.
 
 The structure checks are warnings: chain breaks (with their region, e.g. a gap in
-CDR3), the conserved TCR residues (Cys23, Trp41, Cys104, Phe/Trp118) and, in normalized
+CDR3), the MHC's groove disulfide (Cys11 and Cys74 of G-ALPHA2 or G-BETA), the conserved
+TCR residues (Cys23, Trp41, Cys104, Phe/Trp118) and, in normalized
 files, the TCR numbering against a fresh IMGT numbering.
 
 ## Normalizing

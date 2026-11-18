@@ -275,6 +275,12 @@ def test_missing_region_warns(class_i):
     assert any('no' in str(w.message) and 'CDRA1' in str(w.message) for w in caught)
 
 
+def test_sequence_view(class_i):
+    d = _data(class_i.sequence_view())
+    assert d['sequence_only'] is True
+    assert {'CDRA1', 'CDRB3', 'peptide_core', 'helices'} <= {r['name'] for r in d['regions']}
+
+
 def test_kind_and_pmhc_view(class_i, tmp_path):
     """A pMHC knows it has no TCR: its default view marks no CDRs and warns about nothing;
     CDRs asked for by name are still warned about."""
